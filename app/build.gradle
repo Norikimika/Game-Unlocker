@@ -3,27 +3,37 @@ plugins {
 }
 
 android {
-    compileSdkVersion 33
-    buildToolsVersion "33.0.1"
+    compileSdkVersion 35
 
     defaultConfig {
         applicationId "io.github.rushiranpise.gameunlocker"
         minSdkVersion 28
-        targetSdkVersion 33
+        targetSdkVersion 35
         versionCode 4
         versionName "7.0.0"
+    }
+
+    signingConfigs {
+        release {
+            storeFile file(KEYSTORE_FILE)
+            storePassword KEYSTORE_PASSWORD
+            keyAlias KEY_ALIAS
+            keyPassword KEY_PASSWORD
+        }
     }
 
     buildTypes {
         release {
             minifyEnabled true
-            proguardFiles 'proguard-rules.pro'
+            shrinkResources true
+            signingConfig signingConfigs.release
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
 
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_11
-        targetCompatibility JavaVersion.VERSION_11
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
     }
 
     dependenciesInfo.includeInApk false
