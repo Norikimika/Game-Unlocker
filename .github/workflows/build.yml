@@ -5,6 +5,12 @@ on:
     branches:
       - main
   workflow_dispatch:
+    inputs:
+      release:
+        description: 'Create a GitHub Release'
+        required: true
+        type: boolean
+        default: false
 
 jobs:
   build:
@@ -37,7 +43,8 @@ jobs:
       run: ./gradlew assembleRelease --stacktrace --warning-mode all
 
     - name: Get App Version Name
-      run: echo "APP_VERSION=$(grep versionName app/build.gradle | sed -n 's/.*versionName \"\([0-9.]*\)\".*/\1/p')" >> $GITHUB_ENV
+      run: |
+        echo "APP_VERSION=$(grep versionName app/build.gradle | sed -n 's/.*versionName \"\([0-9.]*\)\".*/\1/p')" >> $GITHUB_ENV
 
     - name: Rename APK
       run: mv app/build/outputs/apk/release/*.apk Game-Unlocker-v${{ env.APP_VERSION }}-${{ github.run_number }}.apk
@@ -59,23 +66,15 @@ jobs:
       run: |
         python3 ./errorbot.py "Game-Unlocker-v${{ env.APP_VERSION }}-${{ github.run_number }}.apk"
 
-    # - name: Create Release
-      # id: create_release
-      # user: softprops/action-gh-release@2.3.2
-      # with:
-        # files: game-unlocker-v${{ steps.version.outputs.app_version }}.apk
-        # tag_name: ${{ steps.version.outputs.app_version }}
-        # release_name: ${{ steps.version.outputs.app_version }}
-        # prerelease: false
-      # env:
-        # GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-    # - name: Upload Release Assets
-      # run: |
-        # release_id=${{ steps.create_release.outputs.id }}
-        # asset_url=$(curl -X POST \
-          # -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
-          # -H "Content-Type: application/octet-stream" \
-          # --data-binary "@game-unlocker-v${{ steps.version.outputs.app_version }}.apk" \
-          # "https://uploads.github.com/repos/${{ github.repository }}/releases/$release_id/assets?name=game-unlocker-v${{ steps.version.outputs.app_version }}.apk")
-        # echo "Uploaded asset: $asset_url"
+    - name: Create Release
+      if: ${{ github.event.inputs.release == 'true' }}
+      id: create_release
+      uses: softprops/action-gh-release@v2.3.2
+      with:
+        files: Game-Unlocker-v${{ env.APP_VERSION }}-${{ github.run_number }}.apk
+        tag_name: ${{ env.APP_VERSION }}
+        name: ${{ env.APP_VERSION }}
+        prerelease: false
+        generate_release_notes: true
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
