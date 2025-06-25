@@ -19,6 +19,8 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v4.2.2
+      with:
+        fetch-depth: 0
 
     - name: Sign key
       run: |
@@ -28,6 +30,19 @@ jobs:
         echo "KEY_PASSWORD=${{ secrets.KEY_PASSWORD }}" >> ./gradle.properties
         echo "${{ secrets.KEYSTORE }}" | base64 -d > ./app/KeyStore.jks
         sed -i "s/versionCode *[0-9]\+/versionCode ${{ github.run_number }}/" ./app/build.gradle
+        if [ "${{ github.event.inputs.release }}" = "true" ]; then
+          FILE=./app/build.gradle
+          VERSION=$(git describe --tags --abbrev=0)
+          if [ -z "$VERSION" ]; then
+            VERSION=$(grep versionName "$FILE" | grep -o '[0-9]\+\.[0-9]\+\.[0-9]\+')
+          else
+            VERSION=$(echo "$VERSION" | sed 's/^v//')
+          fi
+          IFS='.' read -r MAJOR MINOR PATCH <<< "$VERSION"
+          NEW_MAJOR=$((MAJOR + 1))
+          NEW_VERSION="$NEW_MAJOR.0.0"
+          sed -i "s/versionName \".*\"/versionName \"$NEW_VERSION\"/" "$FILE"
+        fi
 
     - name: Set up JDK 17
       uses: actions/setup-java@v4.7.1

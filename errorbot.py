@@ -6,7 +6,7 @@ import html
 def main():
     if len(sys.argv) < 2:
         print("Usage: python errorbot.py <file_path>")
-        sys.exit(1)
+        sys.exit(0)
 
     file_path = sys.argv[1]
 
@@ -47,11 +47,11 @@ def main():
             print(f"Successfully sent: {file_path}")
         else:
             print(f"Failed to send {file_path}. Telegram response:\n{response.text}")
-            sys.exit(1)
+            sys.exit(0)
 
     except Exception as e:
         print(f"An error occurred while sending {file_path}: {e}")
-        sys.exit(1)
+        sys.exit(0)
 
 if __name__ == "__main__":
     main()
